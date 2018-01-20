@@ -1,34 +1,37 @@
-import React from 'react'
-import { WhiteField, BlackField } from '../fields/field'
-import styled from 'styled-components'
+import React, {Component} from 'react'
 import './board.css'
+import Field from './field'
+import { connect } from 'react-redux'
 
-class Field extends React.Component {
-  componentDidMount() {    
-    const { position } = this.props
-    if (position % 2 === 0 && Math.floor(position / 8) % 2 === 0) this.color = "white"  
-    else if (position % 2 === 1 && Math.floor(position / 8) % 2 === 1) this.color = "white"
-    else this.color = "black"
-  }
-
-  onClick() {
-    console.log("check", this.props.position, this.color);
-  }
-  
-  render() {
-    return <div className="box" onClick={this.onClick.bind(this)}>{this.props.position}</div>
+class Board extends Component {
+  render() {    
+    this.fields = []
+    const { markedLight, markedDark } = this.props    
+    for (let i = 0; i < 64; i++) {
+      let selected = ""  
+      if (markedLight && markedLight.includes(i)) {
+        selected = "light"
+      }     
+      if (markedDark && markedDark.includes(i)) {
+        selected = "dark"
+      }
+      this.fields.push(<Field position={i} key={i} selected={selected} checkerInfo={this.props.fields[i]}/>)
+    }
+    return (
+      <div className="wrapper">
+        {this.fields}
+      </div>)
   }
 }
 
-const Board = () => {
-  const fields = []
-  for (let i = 0; i < 64; i++) {
-    fields.push(<Field position={i} key={i}/>)
+const mapStateToProps = state => {
+  return {
+    fields: state.board,
+    markedDark: state.markFields.markedDark,
+    markedLight: state.markFields.markedLight
   }
-  return (
-    <div className="wrapper">
-      {fields}
-    </div>
-)}
+}
 
-export default Board
+export default connect(
+  mapStateToProps
+)(Board)
