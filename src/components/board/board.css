@@ -2,6 +2,26 @@
         margin: 40px;
     }
 
+    .win,
+    .lose {
+        border: 1px solid;
+        margin: 10px auto;
+        padding: 15px 10px 15px 50px;
+        width: 590px;
+        background-repeat: no-repeat;
+        background-position: 10px center;
+    }
+
+    .win {
+        color: #4F8A10;
+        background-color: #DFF2BF;
+    }
+
+    .lose {
+        color: #D8000C;
+        background-color: #FFBABA;
+    }
+
     .wrapper {
         border: 49px solid #D8C1A2;
         width: 560px;

@@ -16,6 +16,10 @@ class Controller extends Component {
         this.updateBoard = this.updateBoard.bind(this)
         this.playerColor = 0
         this.goBot = this.goBot.bind(this)
+        this.state = {
+            message: "",
+            style: ""
+        }
     }
 
     componentDidMount() {        
@@ -36,6 +40,12 @@ class Controller extends Component {
 
     nextMoves() {
         this.moves = this.game.nextMoves()
+        if (this.game.currentColor === this.playerColor && this.moves.isEmpty()) {
+            this.setState({
+                message: "Проигрыш, :`(",
+                style: "lose"
+            })
+        }
         const activeFields = this.game.extractActiveFields(this.moves)
         const activeFieldsPositions = activeFields.map(it => stringPositionToNumber(it))
         this.props.markLight(activeFieldsPositions)
@@ -50,12 +60,24 @@ class Controller extends Component {
         } else if (markedDark && markedLight.indexOf(selectedField) === -1 && markedDark.indexOf(selectedField) > -1) {
             this.go(numberPositionToString(this.from), numberPositionToString(selectedField));            
         } else if (botStep) {
-            const points = this.game.getStepPoints(botStep)
-            this.game.go(botStep)
-            this.props.setBotStep(null)
-            this.game.currentColor = 1 - this.game.currentColor  
-            this.updateBoard()   
-            this.nextMoves()
+            if (botStep === 'lose') {
+                this.setState({
+                    message: "Ура! Победа!",
+                    style: "lose"
+                })
+                this.currentColor = 0
+            } else {
+                const command = botStep
+                this.props.setBotStep(null)
+                const points = this.game.getStepPoints(botStep)
+                this.updateBoard(points)
+                delay(500).then(() => {
+                    this.game.go(botStep)
+                    this.game.currentColor = 1 - this.game.currentColor  
+                    this.updateBoard()   
+                    this.nextMoves()
+                })
+            }
         }
     }
 
@@ -90,12 +112,11 @@ class Controller extends Component {
         const command = this.game.getCommand(this.moves, from, to)
         const points = this.game.getStepPoints(command)
         this.updateBoard(points)
-        // this.game.go(command)
         this.from = null
         this.props.markDark([])
         this.props.markLight([])
         this.props.clearSelection()
-        delay(1000).then(() => {
+        delay(500).then(() => {
             this.game.go(command)
             this.updateBoard()
             this.game.currentColor = 1 - this.game.currentColor   
@@ -104,7 +125,7 @@ class Controller extends Component {
             } else {
                 this.goBot()
             }
-        });
+        })
     }
 
     goBot() {
@@ -122,7 +143,12 @@ class Controller extends Component {
     }
 
     render() {
-        return <Board />
+        return (
+            <div>                
+                <Board />
+                {this.state.style !== "" ? <div className={this.state.style}>{this.state.message}</div> : ""}
+            </div>
+        )
     }
 }
 
