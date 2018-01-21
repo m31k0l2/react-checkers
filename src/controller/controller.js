@@ -2,10 +2,11 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import Board from '../components/board/board'
 import {
-    updateBoard, markLight, markDark, setBotStep, selectField,
+    updateBoard, markLight, markDark, setBotStep, selectField, animate, stringPositionToNumber, numberPositionToString,
     WHITE, BLACK, CHECKER, QUEEN
 } from '../actions/actions'
 import { GameController } from 'checkers/checkers'
+import delay from 'delay'
 
 class Controller extends Component {  
     constructor() {
@@ -24,29 +25,19 @@ class Controller extends Component {
         this.nextMoves()
     }
 
-    updateBoard() {
+    updateBoard(points=null) {
+        if (points) {
+            this.props.animate(points.map(it => stringPositionToNumber(it)))
+        } else {
+            this.props.animate(null)
+        }
         this.props.updateBoard(this.placeCheckers(this.game.getWhiteCheckers(), this.game.getBlackCheckers(), this.game.getQueens()))
-    }
-
-    stringPositionToNumber(sPos) {
-        const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-        const col = letters.indexOf(sPos[0])
-        const row = parseInt(8 - sPos[1], 10)
-        return row * 8 + col
-    }
-
-    numberPositionToString(pos) {
-        const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-        const r = Math.floor(pos / 8)
-        const row = 8 - r
-        const col = pos - r * 8
-        return letters[col] + row
-    }
+    }    
 
     nextMoves() {
         this.moves = this.game.nextMoves()
         const activeFields = this.game.extractActiveFields(this.moves)
-        const activeFieldsPositions = activeFields.map(it => this.stringPositionToNumber(it))
+        const activeFieldsPositions = activeFields.map(it => stringPositionToNumber(it))
         this.props.markLight(activeFieldsPositions)
     }
 
@@ -54,11 +45,12 @@ class Controller extends Component {
         const { selectedField, markedLight, markedDark, botStep } = props
         if ((!markedDark || markedDark.indexOf(selectedField) === -1) && markedLight.indexOf(selectedField) > -1) {    
             this.from = selectedField        
-            const next = this.game.getCheckerMoveFields(this.moves, this.numberPositionToString(selectedField))
-            this.props.markDark([selectedField, ...next.map(it => this.stringPositionToNumber(it))])
+            const next = this.game.getCheckerMoveFields(this.moves, numberPositionToString(selectedField))
+            this.props.markDark([selectedField, ...next.map(it => stringPositionToNumber(it))])
         } else if (markedDark && markedLight.indexOf(selectedField) === -1 && markedDark.indexOf(selectedField) > -1) {
-            this.go(this.numberPositionToString(this.from), this.numberPositionToString(selectedField));            
+            this.go(numberPositionToString(this.from), numberPositionToString(selectedField));            
         } else if (botStep) {
+            const points = this.game.getStepPoints(botStep)
             this.game.go(botStep)
             this.props.setBotStep(null)
             this.game.currentColor = 1 - this.game.currentColor  
@@ -72,7 +64,7 @@ class Controller extends Component {
         for (let pos = 0; pos < 64; pos++) {
             let color = null
             let type = null
-            const sPos = this.numberPositionToString(pos)
+            const sPos = numberPositionToString(pos)
             if (whiteCheckers.indexOf(sPos) > -1) {
                 color = WHITE
                 if (queens.indexOf(sPos) > -1) {
@@ -92,22 +84,27 @@ class Controller extends Component {
         }
         return fields
     }
+    
 
     go(from, to) {
         const command = this.game.getCommand(this.moves, from, to)
-        this.game.go(command)        
-        this.game.print()
+        const points = this.game.getStepPoints(command)
+        this.updateBoard(points)
+        // this.game.go(command)
         this.from = null
         this.props.markDark([])
         this.props.markLight([])
         this.props.clearSelection()
-        this.updateBoard()   
-        this.game.currentColor = 1 - this.game.currentColor   
-        if (this.game.currentColor === this.playerColor) {
-            this.nextMoves()
-        } else {
-            this.goBot()
-        }
+        delay(1000).then(() => {
+            this.game.go(command)
+            this.updateBoard()
+            this.game.currentColor = 1 - this.game.currentColor   
+            if (this.game.currentColor === this.playerColor) {
+                this.nextMoves()
+            } else {
+                this.goBot()
+            }
+        });
     }
 
     goBot() {
@@ -145,7 +142,8 @@ const mapDispatchToProps = dispatch => {
         markDark: positions => dispatch(markDark(positions)),
         updateBoard: fields => dispatch(updateBoard(fields)),
         setBotStep: step => dispatch(setBotStep(step)),
-        clearSelection: () => dispatch(selectField(null))
+        clearSelection: () => dispatch(selectField(null)),
+        animate: points => dispatch(animate(points))
     }
 }
 

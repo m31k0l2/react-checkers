@@ -6,7 +6,7 @@ import { connect } from 'react-redux'
 class Board extends Component {
   render() {    
     this.fields = []
-    const { markedLight, markedDark } = this.props    
+    const { markedLight, markedDark, animate } = this.props    
     for (let i = 0; i < 64; i++) {
       let selected = ""  
       if (markedLight && markedLight.includes(i)) {
@@ -15,7 +15,14 @@ class Board extends Component {
       if (markedDark && markedDark.includes(i)) {
         selected = "dark"
       }
-      this.fields.push(<Field position={i} key={i} selected={selected} checkerInfo={this.props.fields[i]}/>)
+      if (animate && animate[0] === i) {
+        this.points = animate
+        console.log("animate", i, this.points);
+        
+      } else {
+        this.points = null
+      }
+      this.fields.push(<Field position={i} key={i} selected={selected} checkerInfo={this.props.fields[i]} animate={this.points}/>)
     }
     return (
       <div className="wrapper">
@@ -27,6 +34,7 @@ class Board extends Component {
 const mapStateToProps = state => {
   return {
     fields: state.board,
+    animate: state.animate,
     markedDark: state.markFields.markedDark,
     markedLight: state.markFields.markedLight
   }

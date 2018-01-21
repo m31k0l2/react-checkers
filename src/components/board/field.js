@@ -1,36 +1,25 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import './board.css'
-import { WHITE, QUEEN, selectField } from '../../actions/actions'
+import { selectField, numberPositionToString } from '../../actions/actions'
+import Checker from './checker'
 
 class Field extends Component {
     render() {
-        const { selected, checkerInfo } = this.props
-        if (checkerInfo.type) {
-            if (checkerInfo.color === WHITE) {
-                this.checker = "white checker"     
-                if (checkerInfo.type === QUEEN) {
-                    this.checker += " whiteQueen"
-                }           
-            }
-            else {
-                this.checker = "black checker"
-                if (checkerInfo.type === QUEEN) {
-                    this.checker += " blackQueen"
-                }
-            }            
+        const { selected, checkerInfo, position, select, animate } = this.props        
+        if (animate) { 
+            this.points = animate.map(it => numberPositionToString(it))
         } else {
-            this.checker = ""
+            this.points = null
         }
-        return <div className={`box ${selected}`} onClick={() => this.props.select(this.props.position)}><div className={this.checker}/></div>
+        let checker = <Checker checkerInfo={checkerInfo} animate={this.points} />
+        return <div className={`box ${selected}`} onClick={() => select(position)}>{checker}</div>
     }
 }
 
 const mapDispatchToProps = dispatch => {
     return {
-        select: position => {
-            dispatch(selectField(position))
-        }
+        select: position => dispatch(selectField(position))
     }
 }
 
