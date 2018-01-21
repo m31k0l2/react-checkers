@@ -6,7 +6,6 @@ import {
     WHITE, BLACK, CHECKER, QUEEN
 } from '../actions/actions'
 import { GameController } from 'checkers/checkers'
-import delay from 'delay'
 
 class Controller extends Component {  
     constructor() {
@@ -71,12 +70,15 @@ class Controller extends Component {
                 this.props.setBotStep(null)
                 const points = this.game.getStepPoints(botStep)
                 this.updateBoard(points)
-                delay(500).then(() => {
+                const delay = duration => new Promise(resolve => setTimeout(resolve, duration))
+                const doAfterDelay = async (...args) => {
+                    await delay(500);
                     this.game.go(botStep)
-                    this.game.currentColor = 1 - this.game.currentColor  
-                    this.updateBoard()   
+                    this.game.currentColor = 1 - this.game.currentColor
+                    this.updateBoard()
                     this.nextMoves()
-                })
+                }
+                doAfterDelay()
             }
         }
     }
@@ -107,6 +109,7 @@ class Controller extends Component {
         return fields
     }
     
+    
 
     go(from, to) {
         const command = this.game.getCommand(this.moves, from, to)
@@ -116,16 +119,19 @@ class Controller extends Component {
         this.props.markDark([])
         this.props.markLight([])
         this.props.clearSelection()
-        delay(500).then(() => {
+        const delay = duration => new Promise(resolve => setTimeout(resolve, duration))
+        const doAfterDelay = async (...args) => {
+            await delay(500);
             this.game.go(command)
             this.updateBoard()
-            this.game.currentColor = 1 - this.game.currentColor   
+            this.game.currentColor = 1 - this.game.currentColor
             if (this.game.currentColor === this.playerColor) {
                 this.nextMoves()
             } else {
                 this.goBot()
             }
-        })
+        }
+        doAfterDelay()
     }
 
     goBot() {
