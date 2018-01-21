@@ -8,12 +8,7 @@ for (let index = 0; index < 64; index++) {
 export default (state = initialState, action) => {
   switch (action.type) {
     case UPDATE_BOARD:
-      const { position, item } = action.payload      
-      const fields = state.map((obj, index) => {
-        if (index !== position) return obj
-        return item
-      })     
-      return fields
+      return action.payload
     default:
       return state
   }

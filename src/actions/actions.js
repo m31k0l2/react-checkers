@@ -7,10 +7,10 @@ export const BLACK = 'BLACK'
 export const CHECKER = 'CHECKER'
 export const QUEEN = 'QUEEN'
 
-export const setChecker = (position, color, type) => {  
+export const updateBoard = (fields) => {  
   return {
     type: UPDATE_BOARD,
-    payload: { position: position, item: { color: color, type: type }}
+    payload: fields
   }
 }
 

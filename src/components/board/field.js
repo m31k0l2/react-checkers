@@ -8,21 +8,21 @@ class Field extends Component {
         const { selected, checkerInfo } = this.props
         if (checkerInfo.type) {
             if (checkerInfo.color === WHITE) {
-                this.checker = "white checker"
+                this.checker = "white checker"     
                 if (checkerInfo.type === QUEEN) {
-                    this.queen = <img src="whiteQueen.svg" alt="W" />
-                }
+                    this.checker += " whiteQueen"
+                }           
             }
             else {
                 this.checker = "black checker"
                 if (checkerInfo.type === QUEEN) {
-                    this.queen = <img src="blackQueen.svg" alt="W" />
+                    this.checker += " blackQueen"
                 }
-            }
+            }            
         } else {
             this.checker = ""
         }
-        return <div className={`box ${selected}`} onClick={() => this.props.select(this.props.position)}><div className={this.checker}>{this.queen}</div></div>
+        return <div className={`box ${selected}`} onClick={() => this.props.select(this.props.position)}><div className={this.checker}/></div>
     }
 }
 

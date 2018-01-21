@@ -69,6 +69,16 @@
         margin-left: 6px;
     }
 
+    .whiteQueen {
+        background-image: url("/whiteQueen.svg");
+        background-position: 4px 2px;
+    }
+
+    .blackQueen {
+        background-image: url("/blackQueen.svg");
+        background-position: 4px 2px;
+    }
+
     img {
         position: absolute;
         bottom: 6px;
