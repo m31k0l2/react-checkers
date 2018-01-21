@@ -17,8 +17,6 @@ class Controller extends Component {
         this.game = new GameController()
         this.game.currentColor = 0
         this.nextMoves.bind(this)()
-
-        this.stringPositionToNumber("a1")
     }
 
     stringPositionToNumber(sPos) {
@@ -28,14 +26,30 @@ class Controller extends Component {
         return row * 8 + col
     }
 
+    numberPositionToString(pos) {
+        const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+        const r = Math.floor(pos / 8)
+        const row = 8 - r
+        const col = pos - r * 8
+        return letters[col] + row
+    }
+
     nextMoves() {
         this.moves = this.game.nextMoves()
         const activeFields = this.game.extractActiveFields(this.moves)
-        console.log("moves", this.moves);
-        console.log("active", activeFields);
         const activeFieldsPositions = activeFields.map(it => this.stringPositionToNumber(it))
-        console.log("active", activeFieldsPositions);
         this.props.markLight(activeFieldsPositions)
+    }
+
+    componentWillReceiveProps(props) {
+        const { selectedField, markedLight, markedDark } = props
+        if ((!markedDark || markedDark.indexOf(selectedField) === -1) && markedLight.indexOf(selectedField) > -1) {    
+            this.from = selectedField        
+            const next = this.game.getCheckerMoveFields(this.moves, this.numberPositionToString(selectedField))
+            this.props.markDark([selectedField, ...next.map(it => this.stringPositionToNumber(it))])
+        } else if (markedDark && markedLight.indexOf(selectedField) === -1 && markedDark.indexOf(selectedField) > -1) {
+            console.log("move from ", this.numberPositionToString(this.from), "to", this.numberPositionToString(selectedField));            
+        }
     }
 
     render() {
@@ -47,7 +61,8 @@ const mapStateToProps = state => {
     return {
         fields: state.board,
         markedDark: state.markFields.markedDark,
-        markedLight: state.markFields.markedLight
+        markedLight: state.markFields.markedLight,
+        selectedField: state.selectField
     }
 }
 
