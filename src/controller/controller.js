@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import Board from '../components/board/board'
 import {
-    updateBoard, markLight, markDark, setBotStep,
+    updateBoard, markLight, markDark, setBotStep, selectField,
     WHITE, BLACK, CHECKER, QUEEN
 } from '../actions/actions'
 import { GameController } from 'checkers/checkers'
@@ -51,13 +51,19 @@ class Controller extends Component {
     }
 
     componentWillReceiveProps(props) {
-        const { selectedField, markedLight, markedDark } = props
+        const { selectedField, markedLight, markedDark, botStep } = props
         if ((!markedDark || markedDark.indexOf(selectedField) === -1) && markedLight.indexOf(selectedField) > -1) {    
             this.from = selectedField        
             const next = this.game.getCheckerMoveFields(this.moves, this.numberPositionToString(selectedField))
             this.props.markDark([selectedField, ...next.map(it => this.stringPositionToNumber(it))])
         } else if (markedDark && markedLight.indexOf(selectedField) === -1 && markedDark.indexOf(selectedField) > -1) {
             this.go(this.numberPositionToString(this.from), this.numberPositionToString(selectedField));            
+        } else if (botStep) {
+            this.game.go(botStep)
+            this.props.setBotStep(null)
+            this.game.currentColor = 1 - this.game.currentColor  
+            this.updateBoard()   
+            this.nextMoves()
         }
     }
 
@@ -94,6 +100,7 @@ class Controller extends Component {
         this.from = null
         this.props.markDark([])
         this.props.markLight([])
+        this.props.clearSelection()
         this.updateBoard()   
         this.game.currentColor = 1 - this.game.currentColor   
         if (this.game.currentColor === this.playerColor) {
@@ -127,7 +134,8 @@ const mapStateToProps = state => {
         fields: state.board,
         markedDark: state.markFields.markedDark,
         markedLight: state.markFields.markedLight,
-        selectedField: state.selectField
+        selectedField: state.selectField,
+        botStep: state.botStep
     }
 }
 
@@ -136,7 +144,8 @@ const mapDispatchToProps = dispatch => {
         markLight: positions => dispatch(markLight(positions)),
         markDark: positions => dispatch(markDark(positions)),
         updateBoard: fields => dispatch(updateBoard(fields)),
-        setBotStep: step => dispatch(setBotStep(step))
+        setBotStep: step => dispatch(setBotStep(step)),
+        clearSelection: () => dispatch(selectField(null))
     }
 }
 
