@@ -1,13 +1,9 @@
 import React, { Component } from 'react'
+import { connect } from 'react-redux'
 import './board.css'
-import { WHITE, QUEEN } from '../../actions/actions'
+import { WHITE, QUEEN, selectField } from '../../actions/actions'
 
 class Field extends Component {
-    onClick() {
-        const { position } = this.props
-        console.log("check", position, this.props.checkerInfo);
-    }
-
     render() {
         const { selected, checkerInfo } = this.props
         if (checkerInfo.type) {
@@ -26,8 +22,19 @@ class Field extends Component {
         } else {
             this.checker = ""
         }
-        return <div className={`box ${selected}`} onClick={this.onClick.bind(this)}><div className={this.checker}>{this.queen}</div></div>
+        return <div className={`box ${selected}`} onClick={() => this.props.select(this.props.position)}><div className={this.checker}>{this.queen}</div></div>
     }
 }
 
-export default Field
+const mapDispatchToProps = dispatch => {
+    return {
+        select: position => {
+            dispatch(selectField(position))
+        }
+    }
+}
+
+export default connect(
+    null,
+    mapDispatchToProps
+)(Field)

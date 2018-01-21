@@ -1,8 +1,6 @@
 import { MARK_LIGHT, MARK_DARK } from '../actions/actions.js'
 
-const initialState = []
-
-export default (state = initialState, action) => {
+export default (state = [], action) => {
     switch (action.type) {
         case MARK_LIGHT:
             return Object.assign({}, state, {
