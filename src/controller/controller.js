@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import Board from '../components/board/board'
 import {
-    updateBoard, markLight, markDark,
+    updateBoard, markLight, markDark, setBotStep,
     WHITE, BLACK, CHECKER, QUEEN
 } from '../actions/actions'
 import { GameController } from 'checkers/checkers'
@@ -13,6 +13,8 @@ class Controller extends Component {
         this.go = this.go.bind(this)
         this.nextMoves = this.nextMoves.bind(this)
         this.updateBoard = this.updateBoard.bind(this)
+        this.playerColor = 0
+        this.goBot = this.goBot.bind(this)
     }
 
     componentDidMount() {        
@@ -94,7 +96,25 @@ class Controller extends Component {
         this.props.markLight([])
         this.updateBoard()   
         this.game.currentColor = 1 - this.game.currentColor   
-        this.nextMoves()  
+        if (this.game.currentColor === this.playerColor) {
+            this.nextMoves()
+        } else {
+            this.goBot()
+        }
+    }
+
+    goBot() {
+        const worker = new Worker("worker.js")
+        worker.postMessage({
+            white: this.game.getWhiteCheckers(),
+            black: this.game.getBlackCheckers(),
+            queens: this.game.getQueens(),
+            color: this.game.currentColor
+        });
+        worker.onmessage = (e) => {
+            this.props.setBotStep(e.data)
+            worker.terminate()
+        }
     }
 
     render() {
@@ -115,7 +135,8 @@ const mapDispatchToProps = dispatch => {
     return {
         markLight: positions => dispatch(markLight(positions)),
         markDark: positions => dispatch(markDark(positions)),
-        updateBoard: fields => dispatch(updateBoard(fields))
+        updateBoard: fields => dispatch(updateBoard(fields)),
+        setBotStep: step => dispatch(setBotStep(step))
     }
 }
 
