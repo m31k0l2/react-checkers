@@ -8,6 +8,9 @@ export const WHITE = 'WHITE'
 export const BLACK = 'BLACK'
 export const CHECKER = 'CHECKER'
 export const QUEEN = 'QUEEN'
+export const ROTATE = 'ROTATE'
+export const SET_PLAYER = 'SET_PLAYER'
+export const START = 'START'
 
 export const updateBoard = (fields) => {  
   return {
@@ -51,17 +54,49 @@ export function animate(positions) {
   }
 }
 
-export function stringPositionToNumber(sPos) {
+export function setPlayer(color) {
+  return {
+    type: SET_PLAYER,
+    payload: color
+  }
+}
+
+export function stringPositionToNumber(sPos, rotate) {
   const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-  const col = letters.indexOf(sPos[0])
-  const row = parseInt(8 - sPos[1], 10)
+  let col = letters.indexOf(sPos[0])
+  let row = parseInt(sPos[1], 10)
+  if (rotate) {
+    col = 7 - col
+    row = row - 1
+  } else {
+    row = 8 - row
+  }
   return row * 8 + col
 }
 
-export function numberPositionToString(pos) {
+export function numberPositionToString(pos, rotate) {
   const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-  const r = Math.floor(pos / 8)
-  const row = 8 - r
-  const col = pos - r * 8
+  let row = Math.floor(pos / 8)
+  let col = pos - row * 8
+  if (rotate) {
+    col = 7 - col
+    row = row + 1
+  } else {
+    row = 8 - row
+  }  
   return letters[col] + row
+}
+
+export function rotateBoard(rotate) {
+  return {
+    type: ROTATE,
+    payload: rotate
+  }
+}
+
+export function startGame(start) {
+  return {
+    type: START,
+    payload: start
+  }
 }

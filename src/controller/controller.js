@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import Board from '../components/board/board'
 import {
-    updateBoard, markLight, markDark, setBotStep, selectField, animate, stringPositionToNumber, numberPositionToString,
+    updateBoard, markLight, markDark, setBotStep, selectField, animate, stringPositionToNumber, numberPositionToString, startGame,
     WHITE, BLACK, CHECKER, QUEEN
 } from '../actions/actions'
 import { GameController } from 'checkers/checkers'
@@ -12,25 +12,37 @@ class Controller extends Component {
         super()
         this.go = this.go.bind(this)
         this.nextMoves = this.nextMoves.bind(this)
-        this.updateBoard = this.updateBoard.bind(this)
-        this.playerColor = 0
+        this.updateBoard = this.updateBoard.bind(this)        
         this.goBot = this.goBot.bind(this)
+        this.startNewGame = this.startNewGame.bind(this)
         this.state = {
             message: "",
-            style: ""
+            style: "",
+            updateBoard: false
         }
     }
 
     componentDidMount() {        
-        this.game = new GameController()
-        this.game.currentColor = 0
-        this.updateBoard()
-        this.nextMoves()
+        this.startNewGame()
     }
 
-    updateBoard(points=null) {
+    startNewGame(rotate=false) {     
+        this.game = new GameController()
+        this.game.currentColor = 0
+        this.playerColor = rotate ? 1 : 0
+        this.updateBoard()
+        if (rotate) {            
+            this.props.markDark([])
+            this.props.markLight([])
+            this.goBot()
+        } else {          
+            this.nextMoves()
+        }
+    }
+
+    updateBoard(points=null) {        
         if (points) {
-            this.props.animate(points.map(it => stringPositionToNumber(it)))
+            this.props.animate(points.map(it => stringPositionToNumber(it, this.props.rotate)))
         } else {
             this.props.animate(null)
         }
@@ -45,28 +57,34 @@ class Controller extends Component {
                 style: "lose"
             })
         }
-        const activeFields = this.game.extractActiveFields(this.moves)
-        const activeFieldsPositions = activeFields.map(it => stringPositionToNumber(it))
+        const activeFields = this.game.extractActiveFields(this.moves)        
+        const activeFieldsPositions = activeFields.map(it => stringPositionToNumber(it, this.props.rotate))
         this.props.markLight(activeFieldsPositions)
     }
 
     componentWillReceiveProps(props) {
+        if (props.start) {  
+            this.startNewGame(props.rotate)
+            this.props.startGame()
+        }
+        if (props.rotate !== this.props.rotate) {        
+            this.setState({updateBoard: true})
+        }
         const { selectedField, markedLight, markedDark, botStep } = props
         if ((!markedDark || markedDark.indexOf(selectedField) === -1) && markedLight.indexOf(selectedField) > -1) {    
             this.from = selectedField        
-            const next = this.game.getCheckerMoveFields(this.moves, numberPositionToString(selectedField))
-            this.props.markDark([selectedField, ...next.map(it => stringPositionToNumber(it))])
+            const next = this.game.getCheckerMoveFields(this.moves, numberPositionToString(selectedField, this.props.rotate))
+            this.props.markDark([selectedField, ...next.map(it => stringPositionToNumber(it, this.props.rotate))])
         } else if (markedDark && markedLight.indexOf(selectedField) === -1 && markedDark.indexOf(selectedField) > -1) {
-            this.go(numberPositionToString(this.from), numberPositionToString(selectedField));            
+            this.go(numberPositionToString(this.from, this.props.rotate), numberPositionToString(selectedField, this.props.rotate));            
         } else if (botStep) {
             if (botStep === 'lose') {
                 this.setState({
                     message: "Ура! Победа!",
-                    style: "lose"
+                    style: "win"
                 })
                 this.currentColor = 0
             } else {
-                const command = botStep
                 this.props.setBotStep(null)
                 const points = this.game.getStepPoints(botStep)
                 this.updateBoard(points)
@@ -75,7 +93,7 @@ class Controller extends Component {
                     await delay(500);
                     this.game.go(botStep)
                     this.game.currentColor = 1 - this.game.currentColor
-                    this.updateBoard()
+                    this.updateBoard()                    
                     this.nextMoves()
                 }
                 doAfterDelay()
@@ -88,7 +106,7 @@ class Controller extends Component {
         for (let pos = 0; pos < 64; pos++) {
             let color = null
             let type = null
-            const sPos = numberPositionToString(pos)
+            const sPos = numberPositionToString(pos, this.props.rotate)            
             if (whiteCheckers.indexOf(sPos) > -1) {
                 color = WHITE
                 if (queens.indexOf(sPos) > -1) {
@@ -125,7 +143,7 @@ class Controller extends Component {
             this.game.go(command)
             this.updateBoard()
             this.game.currentColor = 1 - this.game.currentColor
-            if (this.game.currentColor === this.playerColor) {
+            if (this.game.currentColor === this.playerColor) {                
                 this.nextMoves()
             } else {
                 this.goBot()
@@ -148,6 +166,18 @@ class Controller extends Component {
         }
     }
 
+    componentDidUpdate() {
+        if (this.state.updateBoard) {
+            this.setState({ updateBoard: false })
+            this.props.clearSelection()
+            this.props.markDark([])
+            this.updateBoard()
+            if (this.game && this.game.currentColor === this.playerColor) {
+                this.nextMoves()        
+            }
+        }
+    }
+
     render() {
         return (
             <div>                
@@ -164,7 +194,9 @@ const mapStateToProps = state => {
         markedDark: state.markFields.markedDark,
         markedLight: state.markFields.markedLight,
         selectedField: state.selectField,
-        botStep: state.botStep
+        botStep: state.botStep,
+        rotate: state.rotate,
+        start: state.start
     }
 }
 
@@ -175,7 +207,8 @@ const mapDispatchToProps = dispatch => {
         updateBoard: fields => dispatch(updateBoard(fields)),
         setBotStep: step => dispatch(setBotStep(step)),
         clearSelection: () => dispatch(selectField(null)),
-        animate: points => dispatch(animate(points))
+        animate: points => dispatch(animate(points)),
+        startGame: () => dispatch(startGame(false))
     }
 }
 

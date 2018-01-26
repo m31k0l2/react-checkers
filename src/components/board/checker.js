@@ -30,7 +30,7 @@ const WhiteQueen = WhiteChecker.extend`
     background-position: 4px 2px;
 `;
 
-const BlackQueen = WhiteChecker.extend`
+const BlackQueen = BlackChecker.extend`
     background-image: url("/blackQueen.svg");
     background-position: 4px 2px;
 `;
